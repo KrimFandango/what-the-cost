@@ -512,7 +512,10 @@
     document.getElementById('daily-cost-value').textContent = getFormattedCost(costOfOwning.perDay.toFixed(2))
     
     if (costOfUsingPerHour) {
+      document.getElementById('usage-stats').classList.remove('wtc-result__item--hidden')
       document.getElementById('hourly-use-cost-value').textContent = getFormattedCost(costOfUsingPerHour.toFixed(2))
+    } else {
+      document.getElementById('usage-stats').classList.add('wtc-result__item--hidden')
     }
   }
 
