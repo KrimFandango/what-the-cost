@@ -254,7 +254,7 @@
       <div class="wtc-form__input-group">
         <input type="number" id="lifespan" name="lifespan" autocomplete="off" min="0" required value="1">
 
-        <select name="lifespan-unit" id="lifespan-unit">
+        <select name="lifespanUnit" id="lifespanUnit">
           <option value="year" selected>Year</option>
           <option value="month">Month</option>
           <option value="day">Day</option>
@@ -268,11 +268,11 @@
       </label>
 
       <div class="wtc-form__input-group">
-        <input type="number" id="recurring" name="recurring" autocomplete="off" min="0" required value="0">
+        <input type="number" id="recurringCost" name="recurringCost" autocomplete="off" min="0" value="0">
 
         <span>every</span>
 
-        <select name="recurring-unit" id="recurring-unit">
+        <select name="recurringCostUnit" id="recurringCostUnit">
           <option value="year" selected>Year</option>
           <option value="month">Month</option>
           <option value="day">Day</option>
@@ -283,21 +283,21 @@
     <div class="wtc-form__form-group">
       <div class="label-group">
         <label for="usage">
-          Usage time
+          Usage frequency
         </label>
       </div>
 
       <div class="wtc-form__input-group">
         <input class="wtc-mb" type="number" id="usage" name="usage" autocomplete="off" min="0">
 
-        <select class="wtc-mb" name="usage-unit" id="usage-type">
+        <select class="wtc-mb" name="usageType" id="usageType">
           <option value="hour" selected>hours</option>
           <option value="use">uses</option>
         </select>
 
         <span>every</span>
 
-        <select name="usage-unit" id="usage-unit">
+        <select name="usageUnit" id="usageUnit">
           <option value="day" selected>Day</option>
           <option value="week">Week</option>
           <option value="month">Month</option>
@@ -307,11 +307,11 @@
     </div>
   
     <div class="wtc-form__form-group">
-      <label for="product-name">
+      <label for="productName">
         Product name
       </label>
 
-      <input type="text" id="product-name" name="product-name" autocomplete="off">
+      <input type="text" id="productName" name="productName" autocomplete="off">
     </div>
 
     <button class="wtc-form__submit-button">Calculate the cost</button>
@@ -372,96 +372,157 @@
   })
 
   if (hasQueryParams) {
-    getResults()
+    getResult()
   }
 
   document.getElementById('form').addEventListener('submit', event => {
     event.preventDefault()
-    getResults()
+    getResult()
   })
 
-  function getResults() {
-    document.querySelectorAll('.wtc-result__item--hidden').forEach(node => node.classList.remove('.wtc-result__item--hidden'))
-    
-    const productName = document.getElementById('product-name').value
-    const lifespan = parseInt(document.getElementById('lifespan').value)
-    const lifespanUnit = document.getElementById('lifespan-unit').value
-    const lifespanInDays = (lifespanUnit === 'day') ? lifespan : (lifespanUnit === 'month') ? lifespan * 30 : lifespan * 365
-  
-    const recurringCost = parseInt(document.getElementById('recurring').value)
-    const recurringUnit = document.getElementById('recurring-unit').value
-    const recurringCostPerDay = (recurringUnit === 'year') ? recurringCost / 365 : (recurringUnit === 'month') ? recurringCost / 30 : recurringCost
-    const totalRecurringCost = lifespanInDays * recurringCostPerDay
-
-    const price = parseInt(document.getElementById('price').value) + (totalRecurringCost || 0)
-
-    const usage = document.getElementById('usage').value
-    const usageUnit = document.getElementById('usage-unit').value
-    const UsageCostPerHour = price / getUsageTotalInHours(lifespanInDays, usage, usageUnit)
-
-    const lifePrice = price / lifespan
-    let yearlyPrice, monthlyPrice, dailyPrice
-
-    if (!usage) {
-      document.getElementById('usage-stats').classList.add('wtc-result__item--hidden')
-    }
-
-    if (lifespanUnit === 'year') {
-      yearlyPrice = lifePrice
-      monthlyPrice = lifePrice / 12
-      dailyPrice = lifePrice / 365
-    } else if (lifespanUnit === 'month') {
-      document.getElementById('yearly-cost').classList.add('wtc-result__item--hidden')
-      monthlyPrice = lifePrice
-      dailyPrice = lifePrice / 30
-    } else {
-      document.getElementById('yearly-cost').classList.add('wtc-result__item--hidden')
-      document.getElementById('monthly-cost').classList.add('wtc-result__item--hidden')
-      dailyPrice = lifePrice
-    }
-
-    if (productName) {
-      document.getElementById('name-value').innerText = productName
-    }
-
-    if (yearlyPrice) {
-      document.getElementById('yearly-cost-value').textContent = kmFormatter(Math.round(yearlyPrice))
-    }
-
-    if (monthlyPrice) {
-      document.getElementById('monthly-cost-value').textContent = kmFormatter(Math.round(monthlyPrice))
-    }
-    
-    document.getElementById('daily-cost-value').textContent = kmFormatter(dailyPrice.toFixed(2))
-    document.getElementById('hourly-use-cost-value').textContent = kmFormatter(UsageCostPerHour.toFixed(2))
-    document.getElementById('usage-type-value').innerText = document.getElementById('usage-type').value
+  function getResult() {
+    const input = getinput()
+    const output = getOutput(input)
+    renderOutput(input.productName, output.costOfOwning, output.costOfUsingPerHour)
+    document.getElementById('usage-type-value').innerText = input.usageType
     document.querySelector('.result').style.visibility = 'visible'
-    let updatedUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?`
-    updatedUrl += `price=${encodeURIComponent(price)}&lifespan=${encodeURIComponent(lifespan)}&unit=${lifespanUnit}&usage=${encodeURIComponent(usage)}&usage-unit=${usageUnit}&usage-type=${document.getElementById('usage-type').value}&recurring=${recurringCost}&recurring-unit=${recurringUnit}`
-
-    if (productName) {
-      updatedUrl += `&name=${encodeURIComponent(productName)}`
-    }
-
+    const queryString = Object.keys(input).map(key => `${key}=${encodeURIComponent(input[key])}`).join('&')
+    const updatedUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?${queryString}`
     window.history.pushState({ path:updatedUrl }, '', updatedUrl)
-    const tweetText = `${productName ? productName : 'A product'} which costs a total of ${price} costs ${dailyPrice.toFixed(2)} per day if it lives for ${lifespan} ${lifespanUnit}${(lifespan > 1) ? 's' : ''}!`
+    const tweetText = `${input.productName ? input.productName : 'A product'} costs me ${getFormattedCost(output.costOfUsingPerHour.toFixed(2))} per hour of usage!`
     document.getElementById('tweet').setAttribute('href', `https://twitter.com/intent/tweet?url=${encodeURIComponent(updatedUrl)}&text=${encodeURIComponent(tweetText)}`)
     ga('send', 'pageview');
-    ga('send', 'event', 'calculate', productName, `${price} - ${lifespan}/${lifespanUnit} - ${usage}/${usageUnit}`, parseInt(price));
+    ga('send', 'event', 'calculate', input.productName, `${input.price} - ${input.lifespan}/${input.lifespanUnit} - ${input.usage}/${input.usageUnit}`, parseInt(input.price));
   }
 
-  function kmFormatter(number) {
+  function getinput() {
+    const input = {}
+    const formData = new FormData(form)
+    const numericFieldNames = ['price', 'lifespan', 'recurringCost', 'usage']
+    
+    for (const [key, value] of formData.entries()) {
+      input[key] = numericFieldNames.includes(key) ? parseInt(value) : value
+    }
+    return input
+  }
+
+  function getOutput(input) {
+    const priceIncludingRecurringCost = getPriceIncludingRecurringCost(input.price, input.recurringCost, input.recurringCostUnit, input.lifespan, input.lifespanUnit)
+    const costOfUsingPerHour = getCostOfUsingPerHour(priceIncludingRecurringCost, input.usage, input.usageUnit, input.lifespan, input.lifespanUnit)
+    const costOfOwning = getCostOfOwning(input.lifespan, input.lifespanUnit, priceIncludingRecurringCost)
+    
+    return {
+      costOfOwning,
+      costOfUsingPerHour
+    }
+  }
+
+  function getPriceIncludingRecurringCost(price, recurringCost, recurringCostUnit, lifespan, lifespanUnit) {
+    if (!recurringCost) {
+      return price
+    }
+    let totalRecurringCost = recurringCost * lifespan
+
+    if (lifespanUnit === 'year') {
+      if (recurringCostUnit === 'month') {
+        totalRecurringCost *= 12
+      } else if (recurringCostUnit === 'day') {
+        totalRecurringCost *= 365
+      }
+    } else if (lifespanUnit === 'month') {
+      if (recurringCostUnit === 'year') {
+        totalRecurringCost /= 12
+      } else if (recurringCostUnit === 'day') {
+        totalRecurringCost *= 30
+      }
+    } else if (lifespanUnit === 'day') {
+      if (recurringCostUnit === 'year') {
+        totalRecurringCost /= 365
+      } else if (recurringCostUnit === 'month') {
+        totalRecurringCost /= 30
+      }
+    }
+
+
+    return price + totalRecurringCost
+  }
+
+  function getCostOfUsingPerHour(price, usage, usageUnit, lifespan, lifespanUnit) {
+    if (!usage) {
+      return 0
+    }
+    let totalUsageHours = lifespan * usage
+
+    if (usageUnit === 'day' || usageUnit === 'week') {
+      if (usageUnit === 'week') {
+        totalUsageHours /= 7
+      }
+      if (lifespanUnit === 'year') {
+        totalUsageHours *= 365
+      } else if (lifespanUnit === 'month') {
+        totalUsageHours *= 30
+      }
+    } else if (usageUnit === 'month') {
+      if (lifespanUnit === 'year') {
+        totalUsageHours *= 12 
+      } else if (lifespanUnit === 'day') {
+        totalUsageHours /= 30
+      }
+    } else if (usageUnit === 'year') {
+      if (lifespanUnit === 'month') {
+        totalUsageHours /= 12 
+      } else if (lifespanUnit === 'day') {
+        totalUsageHours /= 365
+      }
+    }
+
+    return price / totalUsageHours
+  }
+
+  function getCostOfOwning(lifespan, lifespanUnit, price) {
+    let perYear, perMonth, perDay
+    if (lifespanUnit === 'year') {
+      perYear = price / lifespan
+      perMonth = perYear / 12
+      perDay = perYear / 365
+    } else if (lifespanUnit === 'month') {
+      perMonth = price / lifespan
+      perYear = perMonth * 12
+      perDay = perMonth / 30
+    } else if (lifespanUnit === 'day') {
+      perDay = price / lifespan
+      perMonth = perDay * 30
+      perYear = perDay * 365
+    }
+
+    return {
+      perYear,
+      perMonth,
+      perDay
+    }
+  }
+
+  function renderOutput(productName, costOfOwning, costOfUsingPerHour) {
+    if (productName) {
+      document.getElementById('name-value').textContent = productName
+    }
+
+    document.getElementById('yearly-cost-value').textContent = getFormattedCost(Math.round(costOfOwning.perYear))
+    document.getElementById('monthly-cost-value').textContent = getFormattedCost(Math.round(costOfOwning.perMonth))
+    document.getElementById('daily-cost-value').textContent = getFormattedCost(costOfOwning.perDay.toFixed(2))
+    
+    if (costOfUsingPerHour) {
+      document.getElementById('hourly-use-cost-value').textContent = getFormattedCost(costOfUsingPerHour.toFixed(2))
+    }
+  }
+
+  function getFormattedCost(number) {
     var tier = Math.log10(number) / 3 | 0;
     if(tier == 0) return number;
     var suffix = SI_SYMBOL[tier];
     var scale = Math.pow(10, tier * 3);
     var scaled = number / scale;
     return scaled.toFixed(1) + suffix;
-  }
-
-  function getUsageTotalInHours(lifespanInDays, usage, usageUnit) {
-    const usageInHoursPerDay = (usageUnit === 'day') ? usage : (usageUnit === 'week') ? usage / 7 : (usageUnit === 'month') ? usage / 30 : usage / 365
-    return usageInHoursPerDay * lifespanInDays
   }
 </script>
 </body>
