@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    
+    ga('create', 'UA-179512530-1', 'auto');
+    ga('send', 'pageview');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calculate the cost of an item over time">
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <meta property="og:url" content="https://whatthecost.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="What the cost" />
+  <meta property="og:description" content="Real product cost" />
+  <meta
+    property="og:image"
+    content="https://whatthecost.com/what-the-cost.png"
+  />
+  <title>What The Cost</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      color: #333;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: monospace;
+    }
+
+    .wtc-form__submit-button {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #333;
+      padding: 4px 12px;
+      font-size: 24px;
+      cursor: pointer;
+      display: block;
+      margin: 0 auto 32px;
+    }
+
+    .wtc-form__submit-button:hover {
+      background-color: #555;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    input, select {
+      background-color: #fff;
+      border: none;
+      border-bottom: 1px solid #777;
+      padding: 4px 12px;
+      font-size: 22px;
+      height: 36px;
+      color: inherit;
+      width: 100%;
+    }
+
+    input[type="number"], select {
+      max-width: 110px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 6vmin;
+      text-align: center;
+    }
+
+    .title-link {
+      text-decoration: none;
+      font-family: inherit;
+      color: #333;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 6vmin;
+      text-transform: uppercase;
+    }
+
+    label {
+      text-align: left;
+      line-height: 36px;
+    }
+
+    .wtc-form {
+      max-width: 650px;
+      margin: 0  auto;
+      padding: 0 16px;
+    }
+
+    .wtc-form__form-group {
+      display: grid;
+      grid-template-columns: auto 410px;
+      grid-gap: 16px;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+
+    .wtc-form__form-group:last-of-type {
+      margin-bottom: 64px;
+    }
+
+    .wtc-form__input-group {
+      display: block;
+    }
+
+    .result {
+      visibility: hidden;
+      border-radius: 6px;
+      background-color: #333;
+      color: #fff;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    h2, h3 {
+      margin-top: 0;
+      line-height: 1;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 4vmin;
+      font-weight: 300;
+      font-family: 'Press Start 2P', cursive;
+      padding-top: 16px;
+    }
+
+    .wtc-result__group {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .wtc-result__group--first {
+      background-color: rebeccapurple;
+    }
+
+    .wtc-result__group--second {
+      background-color: teal;
+    }
+
+    .wtc-result__subtitle {
+      font-size: 2.5vmin;
+      font-weight: 300;
+      padding: 16px 0;
+      margin: 0;
+    }
+
+    .wtc-result__item {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .wtc-result__item--hidden {
+      visibility: hidden;
+      position: absolute;
+    }
+
+    .wtc-result__figure {
+      font-size: 4.5vmin;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .wtc-result__unit {
+      font-size: 2vmin;
+      font-weight: 300;
+      margin: 0;
+    }
+
+    .wtc-tweet-link-container {
+      font-size: 18px;
+      color: #fff;
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    footer {
+      margin-top: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 0 8px;
+      }
+
+      label {
+        font-weight: bold;
+      }
+
+      button {
+        font-size: 18px;
+      }
+
+      .wtc-form__form-group {
+        grid-template-columns: 1fr;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+
+      .wtc-result__subtitle {
+        font-size: 18px;
+      }
+
+      .wtc-result__figure {
+        font-size: 28px;
+      }
+
+      .wtc-result__unit {
+        font-size: 18px;
+      }
+
+      .wtc-mb {
+        margin-bottom: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    <a class="title-link" href="/">What The Cost</a>
+  </h1>
+
+  <form class="wtc-form" id="form">
+    <div class="wtc-form__form-group">
+      <label class="for="price">
+        Price*
+      </label>
+
+      <input type="number" id="price" name="price" autocomplete="off" min="0" required>
+    </div>
+
+    <div class="wtc-form__form-group">
+      <label for="lifespan">
+        Lifespan*
+      </label>
+
+      <div class="wtc-form__input-group">
+        <input type="number" id="lifespan" name="lifespan" autocomplete="off" min="0" required value="1">
+
+        <select name="lifespan-unit" id="lifespan-unit">
+          <option value="year" selected>Year</option>
+          <option value="month">Month</option>
+          <option value="day">Day</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="wtc-form__form-group">
+      <label for="recurring">
+        Recurring cost
+      </label>
+
+      <div class="wtc-form__input-group">
+        <input type="number" id="recurring" name="recurring" autocomplete="off" min="0" required value="0">
+
+        <span>every</span>
+
+        <select name="recurring-unit" id="recurring-unit">
+          <option value="year" selected>Year</option>
+          <option value="month">Month</option>
+          <option value="day">Day</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="wtc-form__form-group">
+      <div class="label-group">
+        <label for="usage">
+          Usage time
+        </label>
+      </div>
+
+      <div class="wtc-form__input-group">
+        <input class="wtc-mb" type="number" id="usage" name="usage" autocomplete="off" min="0">
+
+        <select class="wtc-mb" name="usage-unit" id="usage-type">
+          <option value="hour" selected>hours</option>
+          <option value="use">uses</option>
+        </select>
+
+        <span>every</span>
+
+        <select name="usage-unit" id="usage-unit">
+          <option value="day" selected>Day</option>
+          <option value="week">Week</option>
+          <option value="month">Month</option>
+          <option value="year">Year</option>
+        </select>
+      </div>
+    </div>
+  
+    <div class="wtc-form__form-group">
+      <label for="product-name">
+        Product name
+      </label>
+
+      <input type="text" id="product-name" name="product-name" autocomplete="off">
+    </div>
+
+    <button class="wtc-form__submit-button">Calculate the cost</button>
+  </form>
+
+  <section class="result">
+    <h2 id="name-value" class="wtc-result__title">Result</h2>
+
+    <h3 class="wtc-result__subtitle">The cost of <u>owning</u> one is</h3>
+
+    <div class="wtc-result__group wtc-result__group--first">
+      <div class="wtc-result__item" id="yearly-cost">
+        <p class="wtc-result__figure" id="yearly-cost-value"></p>
+        <p class="wtc-result__unit">per year</p>
+      </div>
+
+      <div class="wtc-result__item" id="monthly-cost">
+        <p class="wtc-result__figure" id="monthly-cost-value"></p>
+        <p class="wtc-result__unit">per month</p>
+      </div>
+  
+      <div class="wtc-result__item" id="daily-cost">
+        <p class="wtc-result__figure" id="daily-cost-value"></p>
+        <p class="wtc-result__unit">per day</p>
+      </div>
+    </div>
+
+    <div id="usage-stats">
+      <h3 class="wtc-result__subtitle">The cost of <u>using</u> one is</h3>
+
+      <div class="wtc-result__group wtc-result__group--second">
+        <div class="wtc-result__item">
+          <p class="wtc-result__figure" id="hourly-use-cost-value"></p>
+          <p class="wtc-result__unit">per <span id="usage-type-value">hour</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wtc-tweet-link-container">
+      <a id="tweet" target="_blank" href="https://twitter.com/intent/tweet?url=whatthecost.com">Tweet results</a>
+    </div>
+  </section>
+
+  <footer>
+    Created by <a href="https://kkmet.com">Kareem Kamal</a>
+  </footer>
+<script>
+  const SI_SYMBOL = ["", "k", "M", "G", "T", "P", "E"];
+  const urlParams = new URLSearchParams(window.location.search);
+  let hasQueryParams
+
+  urlParams.forEach((value, name) => {
+    const inputField = document.getElementById(name)
+    if (inputField) {
+      hasQueryParams = true
+      inputField.value = value
+    }
+  })
+
+  if (hasQueryParams) {
+    getResults()
+  }
+
+  document.getElementById('form').addEventListener('submit', event => {
+    event.preventDefault()
+    getResults()
+  })
+
+  function getResults() {
+    document.querySelectorAll('.wtc-result__item--hidden').forEach(node => node.classList.remove('.wtc-result__item--hidden'))
+    
+    const productName = document.getElementById('product-name').value
+    const lifespan = parseInt(document.getElementById('lifespan').value)
+    const lifespanUnit = document.getElementById('lifespan-unit').value
+    const lifespanInDays = (lifespanUnit === 'day') ? lifespan : (lifespanUnit === 'month') ? lifespan * 30 : lifespan * 365
+  
+    const recurringCost = parseInt(document.getElementById('recurring').value)
+    const recurringUnit = document.getElementById('recurring-unit').value
+    const recurringCostPerDay = (recurringUnit === 'year') ? recurringCost / 365 : (recurringUnit === 'month') ? recurringCost / 30 : recurringCost
+    const totalRecurringCost = lifespanInDays * recurringCostPerDay
+
+    const price = parseInt(document.getElementById('price').value) + (totalRecurringCost || 0)
+
+    const usage = document.getElementById('usage').value
+    const usageUnit = document.getElementById('usage-unit').value
+    const UsageCostPerHour = price / getUsageTotalInHours(lifespanInDays, usage, usageUnit)
+
+    const lifePrice = price / lifespan
+    let yearlyPrice, monthlyPrice, dailyPrice
+
+    if (!usage) {
+      document.getElementById('usage-stats').classList.add('wtc-result__item--hidden')
+    }
+
+    if (lifespanUnit === 'year') {
+      yearlyPrice = lifePrice
+      monthlyPrice = lifePrice / 12
+      dailyPrice = lifePrice / 365
+    } else if (lifespanUnit === 'month') {
+      document.getElementById('yearly-cost').classList.add('wtc-result__item--hidden')
+      monthlyPrice = lifePrice
+      dailyPrice = lifePrice / 30
+    } else {
+      document.getElementById('yearly-cost').classList.add('wtc-result__item--hidden')
+      document.getElementById('monthly-cost').classList.add('wtc-result__item--hidden')
+      dailyPrice = lifePrice
+    }
+
+    if (productName) {
+      document.getElementById('name-value').innerText = productName
+    }
+
+    if (yearlyPrice) {
+      document.getElementById('yearly-cost-value').textContent = kmFormatter(Math.round(yearlyPrice))
+    }
+
+    if (monthlyPrice) {
+      document.getElementById('monthly-cost-value').textContent = kmFormatter(Math.round(monthlyPrice))
+    }
+    
+    document.getElementById('daily-cost-value').textContent = kmFormatter(dailyPrice.toFixed(2))
+    document.getElementById('hourly-use-cost-value').textContent = kmFormatter(UsageCostPerHour.toFixed(2))
+    document.getElementById('usage-type-value').innerText = document.getElementById('usage-type').value
+    document.querySelector('.result').style.visibility = 'visible'
+    let updatedUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?`
+    updatedUrl += `price=${encodeURIComponent(price)}&lifespan=${encodeURIComponent(lifespan)}&unit=${lifespanUnit}&usage=${encodeURIComponent(usage)}&usage-unit=${usageUnit}&usage-type=${document.getElementById('usage-type').value}&recurring=${recurringCost}&recurring-unit=${recurringUnit}`
+
+    if (productName) {
+      updatedUrl += `&name=${encodeURIComponent(productName)}`
+    }
+
+    window.history.pushState({ path:updatedUrl }, '', updatedUrl)
+    const tweetText = `${productName ? productName : 'A product'} which costs a total of ${price} costs ${dailyPrice.toFixed(2)} per day if it lives for ${lifespan} ${lifespanUnit}${(lifespan > 1) ? 's' : ''}!`
+    document.getElementById('tweet').setAttribute('href', `https://twitter.com/intent/tweet?url=${encodeURIComponent(updatedUrl)}&text=${encodeURIComponent(tweetText)}`)
+    ga('send', 'pageview');
+    ga('send', 'event', 'calculate', productName, `${price} - ${lifespan}/${lifespanUnit} - ${usage}/${usageUnit}`, parseInt(price));
+  }
+
+  function kmFormatter(number) {
+    var tier = Math.log10(number) / 3 | 0;
+    if(tier == 0) return number;
+    var suffix = SI_SYMBOL[tier];
+    var scale = Math.pow(10, tier * 3);
+    var scaled = number / scale;
+    return scaled.toFixed(1) + suffix;
+  }
+
+  function getUsageTotalInHours(lifespanInDays, usage, usageUnit) {
+    const usageInHoursPerDay = (usageUnit === 'day') ? usage : (usageUnit === 'week') ? usage / 7 : (usageUnit === 'month') ? usage / 30 : usage / 365
+    return usageInHoursPerDay * lifespanInDays
+  }
+</script>
+</body>
+</html>
